@@ -138,7 +138,7 @@ int getMotor(char c) {
 /*
 This function gets a servo based on the list of valid servo names and returns the servo's index for use.
 */
-int getServo(char c) { 
+int getServo(char c) {
 	for (int i = 0; i < 10; i++) {
 		if (c == NUMBERS[i]) {
 			return i;
