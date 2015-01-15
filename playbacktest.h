@@ -3,7 +3,7 @@
 
 const char *LETTERS = "abcdefghijklmnopqrstuvwxyz";
 const char *NUMBERS = "1234567890";
-const char *VALID = "abcdefghijklmnopqrstuvwxyz1234567890W";
+const char *VALID = "abcdefghijklmnopqrstuvwxyz1234567890WS-";
 const int MAX_LINES = 64;
 
 const byte CR = 13;
