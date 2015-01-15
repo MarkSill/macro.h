@@ -106,21 +106,6 @@ bool verifyC(char c) {
 		}
 	}
 	return false;
-	/* old code
-	if (c == 'W') {
-		return true;
-	}
-	for (int i = 0; i < 26; i++) {
-		if (c == LETTERS[i]) {
-			return true;
-		}
-	}
-	for (int i = 0; i < 10; i++) {
-		if (c == NUMBERS[i]) {
-			return true;
-		}
-	}
-	*/
 }
 
 /*
@@ -157,7 +142,7 @@ int getNumber(char *c) {
 /*
 This function checks a given string and compares it with valid values to see what type of command it is.
 */
-char* getType(char *c, bool &value) {
+char * getType(char *c, bool &value) {
 	if (c[0] == 'W') {
 		value = false;
 		return "wait";
