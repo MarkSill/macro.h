@@ -6,9 +6,6 @@ const char *NUMBERS = "1234567890";
 const char *VALID = "abcdefghijklmnopqrstuvwxyz1234567890WS-";
 const int MAX_LINES = 64;
 
-const byte CR = 13;
-const byte LF = 10;
-
 TFileHandle handle;
 TFileIOResult result;
 
@@ -17,6 +14,7 @@ TFileIOResult result;
 string msg = "";
 
 void playback(char *filename);
+void process(char *lines, bool hasContent);
 int getMotor(char c);
 int getServo(char c);
 int getNumber(char *c);
@@ -30,14 +28,14 @@ This function is what actually starts reading the file and playing it back.
 */
 void playback(char *filename) {
 	int size;
-	char *lines[MAX_LINES];
-	bool hasContent[MAX_LINES];
+	char lines[6];
+	bool hasContent;
 	int line = 0;
 	OpenRead(handle, result, filename, size);
 	sprintf(msg, "File size: %d bytes", size);
-	writeDebugStream(msg);
+	writeDebugStreamLine(msg);
 	sprintf(msg, "File result: %d", result);
-	writeDebugStream(msg);
+	writeDebugStreamLine(msg);
 
 	char incoming;
 	int pos = 0;
@@ -46,50 +44,59 @@ void playback(char *filename) {
 	//read the file
 	for (int i = 0; i < size; i++) {
 		ReadByte(handle, result, incoming);
-		if (incoming == CR || incoming == LF) {
-			if (incoming == LF) {
-				hasContent[line] = verified;
-				writeDebugStreamLine(lines[line]);
-				line++;
-				pos = 0;
-				verified = false;
+		if (incoming == ';') {
+			hasContent = verified;
+			writeDebugStreamLine(lines);
+			line++;
+			pos = 0;
+			verified = false;
+			//process the file
+			process(lines, hasContent);
+			for (int z = 0; z < 6; z++) {
+				lines[z] = ' ';
 			}
 			} else {
 			if (!verified && pos == 0) {
 				verified = verifyC(incoming);
 			}
 			if (verified) {
-				lines[line][pos] = incoming;
-				pos++;
+				lines[pos] = incoming;
+			} else {
+				lines[pos] = ' ';
 			}
+			pos++;
 		}
 	}
+}
 
+void process(char *lines, bool hasContent) {
 	//process the file
 	char *type = "", *oldtype = "";
 	int toUse;
 	bool value;
 	for (int i = 0; i < MAX_LINES; i++) {
-		if (hasContent[i]) { //make sure the line actually contains commands
-			type = getType(lines[i], value);
+		if (hasContent) { //make sure the line actually contains commands
+			type = getType(lines, value);
 			if (type == "wait") {
-				wait(lines[i]);
+				wait(lines);
 				continue;
-				} else if (type == "motor" || type == "servo") {
+			} else if (type == "motor" || type == "servo") {
 				oldtype = type;
 				if (type == "motor") {
-					toUse = getMotor(lines[i][0]);
-					} else {
-					toUse = getServo(lines[i][0]);
+					toUse = getMotor(lines[0]);
+				} else if (type == "servo") {
+					toUse = getServo(lines[0]);
 				}
-				} else if (type == "value") {
+			} else if (type == "value") {
 				if (oldtype == "motor") {
-					motor[toUse] = getNumber(lines[i]);
-					} else if (oldtype == "servo") {
-					servo[toUse] = getNumber(lines[i]);
-					} else {
+					motor[toUse] = getNumber(lines);
+				} else if (oldtype == "servo") {
+					servo[toUse] = getNumber(lines);
+				} else {
 					//do nothing
 				}
+			} else if (type == "wait") {
+				wait(lines);
 			}
 		}
 		wait1Msec(1);
@@ -136,6 +143,7 @@ int getServo(char c) {
 This function gets a number from a string and returns it for use as an integer.
 */
 int getNumber(char *c) {
+	//writeDebugStreamLine(c);
 	return atoi(c);
 }
 
@@ -157,7 +165,7 @@ char * getType(char *c, bool &value) {
 		for (int i = 0; i < 10; i++) {
 			if (c[0] == NUMBERS[i]) {
 				value = true;
-				return "servo";
+				//return "servo";
 			}
 		}
 		} else {
