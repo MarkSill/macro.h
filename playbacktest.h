@@ -4,7 +4,6 @@
 const char *LETTERS = "abcdefghijklmnopqrstuvwxyz";
 const char *NUMBERS = "1234567890";
 const char *VALID = "abcdefghijklmnopqrstuvwxyz1234567890WS-";
-const int MAX_LINES = 64;
 
 TFileHandle handle;
 TFileIOResult result;
@@ -14,7 +13,7 @@ TFileIOResult result;
 string msg = "";
 
 void playback(char *filename);
-void process(char *lines, bool hasContent);
+char * process(char *lines, bool hasContent, char *oldtype);
 int getMotor(char c);
 int getServo(char c);
 int getNumber(char *c);
@@ -38,6 +37,7 @@ void playback(char *filename) {
 	writeDebugStreamLine(msg);
 
 	char incoming;
+	char *oldtype = "";
 	int pos = 0;
 	bool verified = false;
 
@@ -51,7 +51,7 @@ void playback(char *filename) {
 			pos = 0;
 			verified = false;
 			//process the file
-			process(lines, hasContent);
+			oldtype = process(lines, hasContent, oldtype);
 			for (int z = 0; z < 6; z++) {
 				lines[z] = ' ';
 			}
@@ -61,7 +61,7 @@ void playback(char *filename) {
 			}
 			if (verified) {
 				lines[pos] = incoming;
-			} else {
+				} else {
 				lines[pos] = ' ';
 			}
 			pos++;
@@ -69,38 +69,34 @@ void playback(char *filename) {
 	}
 }
 
-void process(char *lines, bool hasContent) {
+char * process(char *lines, bool hasContent, char *oldtype) {
 	//process the file
-	char *type = "", *oldtype = "";
+	char *type = "";
 	int toUse;
 	bool value;
-	for (int i = 0; i < MAX_LINES; i++) {
-		if (hasContent) { //make sure the line actually contains commands
-			type = getType(lines, value);
-			if (type == "wait") {
-				wait(lines);
-				continue;
-			} else if (type == "motor" || type == "servo") {
-				oldtype = type;
-				if (type == "motor") {
-					toUse = getMotor(lines[0]);
-				} else if (type == "servo") {
-					toUse = getServo(lines[0]);
-				}
-			} else if (type == "value") {
-				if (oldtype == "motor") {
-					motor[toUse] = getNumber(lines);
-				} else if (oldtype == "servo") {
-					servo[toUse] = getNumber(lines);
-				} else {
-					//do nothing
-				}
-			} else if (type == "wait") {
-				wait(lines);
+	if (hasContent) { //make sure the line actually contains commands
+		type = getType(lines, value);
+		if (type == "wait") {
+			wait(lines);
+		} else if (type == "motor" || type == "servo") {
+			oldtype = type;
+			if (type == "motor") {
+				toUse = getMotor(lines[0]);
+			} else if (type == "servo") {
+				toUse = getServo(lines[0]);
+			}
+		} else if (type == "value") {
+			if (oldtype == "motor") {
+				motor[toUse] = getNumber(lines);
+			} else if (oldtype == "servo") {
+				servo[toUse] = getNumber(lines);
+			} else {
+				//do nothing
 			}
 		}
-		wait1Msec(1);
 	}
+	wait1Msec(1);
+	return oldtype;
 }
 
 /*
@@ -183,10 +179,15 @@ char * getType(char *c, bool &value) {
 This function waits a number of milliseconds based on the string supplied to it, formatted something like "W100," which would wait for 500 milliseconds.
 */
 void wait(char *line) {
-	int len = strlen(line);
-	char *characters;
+	int len = strlen(line), dex = 0;
+	char *characters = "";
 	for (int i = 1; i <= len; i++) {
-		characters[i-1] = line[i];
+		for (int z = 0; z < 10; z++) {
+			if (NUMBERS[z] == line[i]) {
+				characters[dex] = line[i];
+				dex++;
+			}
+		}
 	}
 	int wTime = atoi(characters);
 	wait1Msec(wTime);
