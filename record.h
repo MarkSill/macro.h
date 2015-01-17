@@ -14,7 +14,7 @@ const int MAX_STEPS = 30000;
 
 const char letters[26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 const char numbers[10] = {'1','2','3','4','5','6','7','8','9','0'};
-const char *endl = "\r\n";
+const byte endl = ';';
 
 #endif
 
@@ -33,7 +33,7 @@ TFileIOResult result;
 
 int lastMotors[MAX_SIZE], lastServos[MAX_SIZE];
 
-int step = 0, startMotor, startServo, endMotor, endServo;
+int step = 0, since = 0, startMotor, startServo, endMotor, endServo;
 
 void startRecording(int startMtr, int startSrv, int endMtr, int endSrv, char *filename) {
 	startMotor = startMtr;
@@ -69,6 +69,24 @@ void update() {
 			lastServos[i] = servo[servos[i]];
 		}
 	}*/
+	if (changed) {
+		if (since > 0) {
+			WriteByte(handle, result, 'W');
+			char *hi = "0";
+			sprintf(hi, "%d", since);
+			/*
+			writeDebugStreamLine(hi);
+			for (int i = 0; i < strlen(hi); i++) {
+				WriteByte(handle, result, hi[i]);
+			}
+			*/
+			WriteString(handle, result, hi);
+			WriteByte(handle, result, ';');
+		}
+		since = 0;
+	} else {
+		since++;
+	}
 	step++;
 	if (step >= MAX_STEPS) {
 		recording = false;
@@ -77,16 +95,22 @@ void update() {
 }
 
 void write(char name, int value) {
-	string test = "0";
+	//need to convert value to string so I can write bytes instead of strings
+	char *test = "0";
 	sprintf(test, "%c", name);
 	writeDebugStreamLine(test);
-	WriteString(handle, result, test);
-	WriteString(handle, result, endl);
+	WriteByte(handle, result, name);
+	WriteByte(handle, result, endl);
+	WriteFloat(handle, result, value);
+	/*
 	test = "0";
 	sprintf(test, "%d", value);
 	writeDebugStreamLine(test);
-	WriteString(handle, result, test);
-	WriteString(handle, result, endl);
+	for (int i = 0; i < strlen(test); i++) {
+		WriteByte(handle, result, test[i]);
+	}
+	*/
+	WriteByte(handle, result, endl);
 }
 
 void stopRecording() {
