@@ -1,7 +1,25 @@
 /*
 macro.h was originally created by Caleb Jeppesen.
-This file was last edited on 1/10/15.
+This file was last edited on 1/27/15.
 This file is licensed under MIT.
+*/
+
+/* TODO:
+ * Add full servo support. This shouldn't be all that difficult to add.
+ * Making saving more efficient. Currently there are a lot of empty spaces that are eating up available space. We are very limited, so every byte counts!
+ * Figure out what on Earth is going on with the saving system. It really likes storing characters from previous saving sessions for some reason, and I can't figure out how to clear the strings, even though they are being reinitialized every time they go through the functions/loops.
+ * Update system to save everything through bytes. This has a lot to do with efficiency. Using WriteFloat seems to be the cause of the empty spaces.
+ * Currently system saves like this: d50;W5000;d0; (13 bytes). An even better way would be this: d50W5000d0 (10 bytes). This last one may be a little optimistic though. It'll take a bit of work to get working, mainly rewrites from current code that is being used.
+*/
+
+/* Notes on saving most efficiently:
+In order to save in the extremely efficient way mentioned above in the TODO section, the library will need a major rewrite. More booleans, more states, more stuff (although I may be able to reduce the actual library's size, so that'll be useful if I can manage to do that).
+Example comparisions:
+	Current: d50;W5000;d0; (13 bytes)
+	Soon-to-be: d50W5000d0 (10 bytes)
+	
+This may not seem like a big deal, but this small increase is massively scaled when you have larger files. For example, take the largest possible file: Lots of servos all moving to negative three digit values: 7 bytes per command! This amounts to 210000 bytes in a file!
+Now let's take the other format, which is only 6 bytes per command: Merely 180000 bytes, or a 30000 byte decrease, which amounts to nearly 30 kilobytes of space saved! That's around a third of the NXT's memory, so it's extremely important that we go through with this major change. It will not only save space, but will also make the library faster and more efficient, as it will have to loop through less characters when compared to the current system. Definitely only benefits!
 */
 
 //make sure no errors arise from constant conflicts
@@ -12,8 +30,11 @@ This file is licensed under MIT.
 const int MAX_SIZE = 12;
 const int MAX_STEPS = 30000;
 
-const char letters[26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
-const char numbers[10] = {'1','2','3','4','5','6','7','8','9','0'};
+const char LETTERS[26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+const char NUMBERS[10] = {'1','2','3','4','5','6','7','8','9','0'};
+//const byte NEGATIVE = '-'; //not actually needed because WriteFloat includes the negative sign
+const byte WAIT = 'W';
+//const byte SERVO = 'S'; //not currently being used as the library does not currently support servos
 const byte endl = ';';
 
 #endif
@@ -58,7 +79,7 @@ void update() {
 	bool changed = false;
 	for (int i = startMotor; i <= endMotor; i++) {
 		if (motor[i] != lastMotors[i]) {
-			write(letters[i], motor[i]);
+			write(LETTERS[i], motor[i]);
 			lastMotors[i] = motor[i];
 			changed = true;
 		}
@@ -71,7 +92,7 @@ void update() {
 	}*/
 	if (changed) {
 		if (since > 0) {
-			WriteByte(handle, result, 'W');
+			WriteByte(handle, result, WAIT);
 			char *hi = "0";
 			sprintf(hi, "%d", since);
 			/*
@@ -115,7 +136,7 @@ void write(char name, int value) {
 
 void stopRecording() {
 	Close(handle, result);
-	string test = "-1";
+	string test = "error during sprintf()";
 	sprintf(test, "%d", result);
 	writeDebugStreamLine(test);
 }
