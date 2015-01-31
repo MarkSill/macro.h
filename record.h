@@ -1,6 +1,6 @@
 /*
 macro.h was originally created by Caleb Jeppesen.
-This file was last edited on 1/27/15.
+This file was last edited on 1/29/15.
 This file is licensed under MIT.
 */
 
@@ -9,15 +9,15 @@ This file is licensed under MIT.
  * Making saving more efficient. Currently there are a lot of empty spaces that are eating up available space. We are very limited, so every byte counts!
  * Figure out what on Earth is going on with the saving system. It really likes storing characters from previous saving sessions for some reason, and I can't figure out how to clear the strings, even though they are being reinitialized every time they go through the functions/loops.
  * Update system to save everything through bytes. This has a lot to do with efficiency. Using WriteFloat seems to be the cause of the empty spaces.
- * Currently system saves like this: d50;W5000;d0; (13 bytes). An even better way would be this: d50W5000d0 (10 bytes). This last one may be a little optimistic though. It'll take a bit of work to get working, mainly rewrites from current code that is being used.
+ * Currently system saves like this: d;50  ;W5000  ;d0  ; (21 bytes). An even better way would be this: d50W5000d0 (10 bytes). This last one may be a little optimistic though. It'll take a bit of work to get working, mainly rewrites from current code that is being used.
 */
 
 /* Notes on saving most efficiently:
 In order to save in the extremely efficient way mentioned above in the TODO section, the library will need a major rewrite. More booleans, more states, more stuff (although I may be able to reduce the actual library's size, so that'll be useful if I can manage to do that).
 Example comparisions:
-	Current: d50;W5000;d0; (13 bytes)
+	Current: d;50  ;W5000  ;d;0  ; (21 bytes)
 	Soon-to-be: d50W5000d0 (10 bytes)
-	
+
 This may not seem like a big deal, but this small increase is massively scaled when you have larger files. For example, take the largest possible file: Lots of servos all moving to negative three digit values: 7 bytes per command! This amounts to 210000 bytes in a file!
 Now let's take the other format, which is only 6 bytes per command: Merely 180000 bytes, or a 30000 byte decrease, which amounts to nearly 30 kilobytes of space saved! That's around a third of the NXT's memory, so it's extremely important that we go through with this major change. It will not only save space, but will also make the library faster and more efficient, as it will have to loop through less characters when compared to the current system. Definitely only benefits!
 */
@@ -35,7 +35,7 @@ const char NUMBERS[10] = {'1','2','3','4','5','6','7','8','9','0'};
 //const byte NEGATIVE = '-'; //not actually needed because WriteFloat includes the negative sign
 const byte WAIT = 'W';
 //const byte SERVO = 'S'; //not currently being used as the library does not currently support servos
-const byte endl = ';';
+const byte ENDL = ';';
 
 #endif
 
@@ -61,7 +61,7 @@ void startRecording(int startMtr, int startSrv, int endMtr, int endSrv, char *fi
 	startServo = startSrv;
 	endMotor = endMtr;
 	endServo = endSrv;
-	int size = 1000;
+	int size = 10000;
 	Delete(filename, result);
 	OpenWrite(handle, result, filename, size);
 }
@@ -93,16 +93,9 @@ void update() {
 	if (changed) {
 		if (since > 0) {
 			WriteByte(handle, result, WAIT);
-			char *hi = "0";
-			sprintf(hi, "%d", since);
-			/*
-			writeDebugStreamLine(hi);
-			for (int i = 0; i < strlen(hi); i++) {
-				WriteByte(handle, result, hi[i]);
-			}
-			*/
-			WriteString(handle, result, hi);
-			WriteByte(handle, result, ';');
+			string num = since;
+			WriteString(handle, result, num);
+			WriteByte(handle, result, ENDL);
 		}
 		since = 0;
 	} else {
@@ -117,21 +110,14 @@ void update() {
 
 void write(char name, int value) {
 	//need to convert value to string so I can write bytes instead of strings
-	char *test = "0";
-	sprintf(test, "%c", name);
-	writeDebugStreamLine(test);
+	string num = value;
+	//sprintf(num, "%d", value);
+	writeDebugStreamLine(num);
 	WriteByte(handle, result, name);
-	WriteByte(handle, result, endl);
-	WriteFloat(handle, result, value);
-	/*
-	test = "0";
-	sprintf(test, "%d", value);
-	writeDebugStreamLine(test);
-	for (int i = 0; i < strlen(test); i++) {
-		WriteByte(handle, result, test[i]);
-	}
-	*/
-	WriteByte(handle, result, endl);
+	WriteByte(handle, result, ENDL);
+	WriteString(handle, result, num);
+	WriteString(handle, result, "");
+	WriteByte(handle, result, ENDL);
 }
 
 void stopRecording() {
