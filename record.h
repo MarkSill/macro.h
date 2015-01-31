@@ -61,7 +61,7 @@ void startRecording(int startMtr, int startSrv, int endMtr, int endSrv, char *fi
 	startServo = startSrv;
 	endMotor = endMtr;
 	endServo = endSrv;
-	int size = 10000;
+	short size = 10000;
 	Delete(filename, result);
 	OpenWrite(handle, result, filename, size);
 }
