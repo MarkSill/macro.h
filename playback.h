@@ -46,7 +46,7 @@ void playback(char *filename, int startMtr, int startSrv, int endMtr, int endSrv
 	string t = "";
 	sprintf(t, "File size is %d bytes", size);
 	writeDebugStreamLine(t);
-	
+
 	for (int i = 0; i < msize; i++) {
 		char *hi = "";
 		lines[i] = hi;
