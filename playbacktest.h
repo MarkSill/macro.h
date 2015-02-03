@@ -2,7 +2,7 @@
 #define MACRO_H
 
 const char *LETTERS = "abcdefghijklmnopqrstuvwxyz";
-const char *NUMBERS = "1234567890";
+const char *NUMBERS = "1234567890-";
 const char *VALID = "abcdefghijklmnopqrstuvwxyz1234567890WS-";
 
 TFileHandle handle;
@@ -19,7 +19,7 @@ int getServo(char c);
 int getNumber(char *c);
 bool verifyC(char c);
 char* getType(char *c, bool &value);
-void wait(char *line);
+void wait(const string line);
 
 /*
 This is the only function that the user should ever have to use during the course of usage of this library.
@@ -31,9 +31,9 @@ void playback(char *filename, int minimum, int maximum) {
 	bool hasContent;
 	int line = 0;
 	OpenRead(handle, result, filename, size);
-	//sprintf(msg, "File size: %d bytes", size);
+	sprintf(msg, "File size: %d bytes", size);
 	writeDebugStreamLine(msg);
-	//sprintf(msg, "File result: %d", result);
+	sprintf(msg, "File result: %d", result);
 	writeDebugStreamLine(msg);
 
 	char incoming;
@@ -73,14 +73,17 @@ void playback(char *filename, int minimum, int maximum) {
 }
 
 char * process(char *lines, bool hasContent, char *oldtype) {
+	//writeDebugStreamLine(lines);
 	//process the file
 	char *type = "";
 	int toUse;
 	bool value;
 	if (hasContent) { //make sure the line actually contains commands
 		type = getType(lines, value);
+		writeDebugStreamLine(type);
 		if (type == "wait") {
-			wait(lines);
+			string t = lines;
+			wait(t);
 		} else if (type == "motor" || type == "servo") {
 			oldtype = type;
 			if (type == "motor") {
@@ -168,7 +171,7 @@ char * getType(char *c, bool &value) {
 			}
 		}
 		} else {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 11; i++) {
 			if (c[0] == NUMBERS[i]) {
 				value = false;
 				return "value";
@@ -181,17 +184,13 @@ char * getType(char *c, bool &value) {
 /*
 This function waits a number of milliseconds based on the string supplied to it, formatted something like "W100," which would wait for 500 milliseconds.
 */
-void wait(char *line) {
-	int len = strlen(line), dex = 0;
-	char *characters = "";
-	for (int i = 1; i <= len; i++) {
-		for (int z = 0; z < 10; z++) {
-			if (NUMBERS[z] == line[i]) {
-				characters[dex] = line[i];
-				dex++;
-			}
-		}
+void wait(const string line) {
+	int len = strlen(line);
+	string str = "";
+	for (int i = 1; i < len; i++) {
+		char c = stringGetChar(line, i);
+		str += c;
 	}
-	int wTime = atoi(characters);
+	int wTime = atoi(str);
 	wait1Msec(wTime);
 }
