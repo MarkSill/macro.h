@@ -30,8 +30,8 @@ Now let's take the other format, which is only 6 bytes per command: Merely 18000
 const int MAX_SIZE = 12;
 const int MAX_STEPS = 30000;
 
-const char LETTERS[26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
-const char NUMBERS[10] = {'1','2','3','4','5','6','7','8','9','0'};
+const char LETTERS[27] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','\0'};
+const char NUMBERS[11] = {'1','2','3','4','5','6','7','8','9','0','\0'};
 //const byte NEGATIVE = '-'; //not actually needed because WriteFloat includes the negative sign
 const byte WAIT = 'W';
 //const byte SERVO = 'S'; //not currently being used as the library does not currently support servos
