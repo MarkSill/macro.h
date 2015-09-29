@@ -13,8 +13,8 @@ const int MAX_SIZE = 8;
 const int MAX_STEPS = 30000;
 const int LINE_SIZE = 8;
 
-const char letters[26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
-const char numbers[10] = {'1','2','3','4','5','6','7','8','9','0'};
+const char letters[27] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','\0'};
+const char numbers[11] = {'1','2','3','4','5','6','7','8','9','0','\0'};
 
 const byte CR = 13;
 const byte LF = 10;
